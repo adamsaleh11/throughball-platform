@@ -47,7 +47,7 @@ export default function SignupPage() {
       }
 
       if (data.session) {
-        router.push("/onboarding");
+        window.location.href = "/onboarding";
       } else {
         setNotice("Check your email to confirm your account.");
       }
