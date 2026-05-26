@@ -14,7 +14,7 @@ from app.core.auth import (
 
 
 router = APIRouter()
-ALLOWED_MATCH_TAGS = {"rivalry", "high_press", "underdog", "knockout", "fan_festival"}
+
 auth_validator = SupabaseJwtValidator()
 
 
@@ -146,19 +146,6 @@ async def update_profile(
         if authorization:
             return unauthorized(request, "Invalid bearer token.")
         return unauthorized(request, "Missing bearer token.")
-
-    invalid_tags = set(payload.preferred_match_tags) - ALLOWED_MATCH_TAGS
-    if invalid_tags:
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={
-                "error": {
-                    "code": "VALIDATION_ERROR",
-                    "message": "Unsupported preferred match tag.",
-                },
-                "meta": response_meta(request),
-            },
-        )
 
     try:
         profile_payload = await profile_service.update_profile(

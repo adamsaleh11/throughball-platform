@@ -68,10 +68,35 @@ export const teams = [
   { id: "54e5d2ac-efb1-54cd-b8a4-95f8dfd64508", name: "New Zealand" }
 ];
 
-export const matchTags = [
-  { id: "rivalry", label: "Rivalry" },
-  { id: "high_press", label: "High press" },
-  { id: "underdog", label: "Underdog" },
-  { id: "knockout", label: "Knockout" },
-  { id: "fan_festival", label: "Fan festival" }
+export type FootballExperience = {
+  id: string;
+  title: string;
+  description: string;
+};
+
+export const footballExperiences: FootballExperience[] = [
+  { id: "electric_atmosphere", title: "Electric Stadium Atmosphere", description: "Feel the roar of 80,000 fans as the stadium erupts. Chants, drums, and pure energy." },
+  { id: "historic_rivalry", title: "Historic Rivalries", description: "Witness matches that carry decades of history. These games mean more than three points." },
+  { id: "fan_festival", title: "Fan Festivals & Watch Parties", description: "Join thousands of fans celebrating together. The party before and after the match." },
+  { id: "tactical_football", title: "Tactical Football", description: "Appreciate the chess match on the pitch — pressing traps, positional play, and tactical genius." },
+  { id: "underdog_story", title: "Underdog Stories", description: "Root for the nation no one expected. When the impossible becomes real, magic happens." },
+  { id: "fast_attacking", title: "Fast & Attacking Football", description: "Non-stop pace, swift counters, and relentless attacking intent from the first whistle." },
+  { id: "football_nightlife", title: "Football Nightlife", description: "Sports bars, live screenings, and a city that never sleeps on match nights." },
+  { id: "world_class_players", title: "World-Class Players", description: "Watch the best players on the planet perform at their absolute peak." },
+  { id: "global_fan_culture", title: "Global Fan Culture", description: "Meet fans from every corner of the planet. The World Cup is the world in one place." },
+  { id: "knockout_matches", title: "High-Stakes Knockout Matches", description: "No second chances. Every decision could end a nation's World Cup dream." },
+  { id: "emotional_moments", title: "Emotional Tournament Moments", description: "The tears, the celebrations, the heartbreak. Football is the most human sport." },
+  { id: "hidden_local", title: "Hidden Local Football Spots", description: "Discover where locals actually watch. Tiny bars, neighbourhood squares, real culture." },
+  { id: "premium_matchday", title: "Premium Matchday Experience", description: "The best seats, hospitality suites, and everything a world-class event can offer." },
+  { id: "casual_social", title: "Casual Social Viewing", description: "Keep it relaxed. Good company, cold drinks, and football on the screen." },
+  { id: "football_history", title: "Football History & Legacy", description: "Iconic stadiums, legendary nations, and the stories that shaped the beautiful game." },
+  { id: "family_friendly", title: "Family-Friendly Experiences", description: "Bring the whole family. Safe, festive, and memorable for every age." },
+  { id: "travel_tourism", title: "Travel & City Exploration", description: "The World Cup is your excuse to explore incredible host cities and local culture." },
+  { id: "passionate_supporters", title: "Passionate Supporter Culture", description: "Stand with the most dedicated fans — scarves, colours, and unwavering loyalty." },
+  { id: "stadium_energy", title: "Chants, Drums & Stadium Energy", description: "Ultras in full voice, synchronized chants, and the drumbeat that drives a team forward." },
+  { id: "content_creation", title: "Photography & Content Creation", description: "Capture the tournament through your lens — iconic shots, fan moments, stadium beauty." },
+  { id: "dramatic_moments", title: "Dramatic Late-Game Moments", description: "Injury-time goals, penalty shoot-outs, and moments that rewrite history in seconds." },
+  { id: "international_fans", title: "International Fan Interaction", description: "Trade jerseys, share stories, and make lifelong connections from across the globe." },
+  { id: "sports_bars", title: "Sports Bars & Fan Zones", description: "Find the best spots to watch with fellow fans. The right bar makes the match." },
+  { id: "tactical_analysis", title: "Tactical Analysis & Strategy", description: "Break down formations, pressing systems, and coaching decisions like a pro." }
 ];

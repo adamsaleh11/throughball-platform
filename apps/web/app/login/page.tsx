@@ -34,7 +34,7 @@ function LoginForm() {
         setError(loginError.message);
         return;
       }
-      router.push(searchParams.get("next") ?? "/app");
+      window.location.href = searchParams.get("next") ?? "/app";
     } finally {
       setIsSubmitting(false);
     }
