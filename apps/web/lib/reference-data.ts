@@ -11,7 +11,7 @@ export const hostCities = [
   { id: "4da740f5-55c8-53a1-bc01-2f16e943110d", name: "Kansas City", countryCode: "US", stadiumName: "GEHA Field at Arrowhead Stadium" },
   { id: "8b2dc317-8b49-5b8a-8544-7d091044b4e1", name: "Los Angeles", countryCode: "US", stadiumName: "SoFi Stadium" },
   { id: "bd337c08-d7f9-57bb-8a33-c2feeb3ca18f", name: "Miami", countryCode: "US", stadiumName: "Hard Rock Stadium" },
-  { id: "e0452c84-d22b-54b2-9f48-6805f73801c6", name: "New York/NJ", countryCode: "US", stadiumName: "MetLife Stadium" },
+  { id: "e0452c84-d22b-54b2-9f48-6805f73801c6", name: "New York/New Jersey", countryCode: "US", stadiumName: "MetLife Stadium" },
   { id: "4d1935bc-b2b5-5ebf-9ea9-36ba368d8972", name: "Philadelphia", countryCode: "US", stadiumName: "Lincoln Financial Field" },
   { id: "cc33e2c4-6c1c-5d5b-8985-6015ed027a07", name: "San Francisco Bay Area", countryCode: "US", stadiumName: "Levi's Stadium" },
   { id: "e5fae842-3ec7-5636-a2ae-ebb90793ee85", name: "Seattle", countryCode: "US", stadiumName: "Lumen Field" }

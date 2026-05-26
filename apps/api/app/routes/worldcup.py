@@ -4,7 +4,12 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse
 
-from app.core.worldcup import SupabaseWorldCupService, WorldCupStorageError
+from app.core.worldcup import (
+    MatchCatalogQuery,
+    WorldCupCatalog,
+    WorldCupStorageError,
+    get_default_worldcup_catalog,
+)
 
 
 router = APIRouter()
@@ -34,30 +39,17 @@ def storage_error(request: Request, error: WorldCupStorageError) -> JSONResponse
     )
 
 
-class WorldCupService:
-    async def list_cities(self) -> list[dict[str, Any]]:
-        raise NotImplementedError("World Cup service is not configured.")
-
-    async def list_matches(
-        self,
-        city_id: Optional[str],
-        page: int,
-        page_size: int,
-    ) -> dict[str, Any]:
-        raise NotImplementedError("World Cup service is not configured.")
-
-
-def get_worldcup_service() -> WorldCupService:
-    return SupabaseWorldCupService()
+def get_worldcup_catalog() -> WorldCupCatalog:
+    return get_default_worldcup_catalog()
 
 
 @router.get("/cities")
 async def list_cities(
     request: Request,
-    worldcup_service: WorldCupService = Depends(get_worldcup_service),
+    worldcup_catalog: WorldCupCatalog = Depends(get_worldcup_catalog),
 ) -> JSONResponse:
     try:
-        cities = await worldcup_service.list_cities()
+        cities = await worldcup_catalog.cities()
     except WorldCupStorageError as error:
         return storage_error(request, error)
 
@@ -75,10 +67,12 @@ async def list_matches(
     city_id: Optional[str] = None,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
-    worldcup_service: WorldCupService = Depends(get_worldcup_service),
+    worldcup_catalog: WorldCupCatalog = Depends(get_worldcup_catalog),
 ) -> JSONResponse:
     try:
-        payload = await worldcup_service.list_matches(city_id, page, page_size)
+        payload = await worldcup_catalog.matches(
+            MatchCatalogQuery(city_id=city_id, page=page, page_size=page_size)
+        )
     except WorldCupStorageError as error:
         return storage_error(request, error)
 

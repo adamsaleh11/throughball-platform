@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { LogOut, Settings, UserRound } from "lucide-react";
+import { LogOut, Settings, Tag, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -114,14 +114,15 @@ export default function ProtectedAppPage() {
                   {profileQuery.data.preferences.favorite_team_ids.length !== 1 ? "s" : ""} following
                 </p>
                 {profileQuery.data.preferences.preferred_match_tags.length > 0 ? (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
+                  <div className="mt-3 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto pr-1">
                     {profileQuery.data.preferences.preferred_match_tags.map((tagId) => {
                       const exp = footballExperiences.find((e) => e.id === tagId);
                       return (
                         <span
-                          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs"
+                          className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                           key={tagId}
                         >
+                          <Tag aria-hidden="true" className="h-3 w-3 shrink-0" />
                           {exp ? exp.title : tagId}
                         </span>
                       );

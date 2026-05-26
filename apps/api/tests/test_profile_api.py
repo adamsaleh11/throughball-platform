@@ -1,20 +1,20 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.routes.profile import get_current_user, get_profile_service
+from app.routes.profile import get_current_user, get_profile_persistence
 
 
 client = TestClient(app)
 
 
-class FakeProfileService:
+class FakeProfilePersistence:
     def __init__(self) -> None:
-        self.updated_payload = None
+        self.updated_command = None
 
-    async def get_profile(self, user_id: str, access_token: str) -> dict:
+    async def current_profile(self, user) -> dict:
         return {
             "profile": {
-                "id": user_id,
+                "id": user.user_id,
                 "display_name": "Alex",
                 "avatar_url": None,
                 "profile_completed": True,
@@ -22,7 +22,7 @@ class FakeProfileService:
                 "updated_at": "2026-05-25T12:00:00Z",
             },
             "preferences": {
-                "user_id": user_id,
+                "user_id": user.user_id,
                 "home_city_id": "11111111-1111-1111-1111-111111111111",
                 "preferred_match_tags": ["rivalry"],
                 "favorite_team_ids": ["22222222-2222-2222-2222-222222222222"],
@@ -31,30 +31,29 @@ class FakeProfileService:
             },
         }
 
-    async def update_profile(self, user_id: str, access_token: str, payload: dict) -> dict:
-        self.updated_payload = {
-            "user_id": user_id,
-            "access_token": access_token,
-            "payload": payload,
+    async def save_current_profile(self, user, command) -> dict:
+        self.updated_command = {
+            "user_id": user.user_id,
+            "access_token": user.access_token,
+            "command": command,
         }
-        profile_completed = bool(
-            payload.get("display_name")
-            and (payload.get("home_city_id") or payload.get("favorite_team_ids"))
-        )
+        favorite_team_ids = [str(team_id) for team_id in command.favorite_team_ids]
+        home_city_id = str(command.home_city_id) if command.home_city_id else None
+        profile_completed = bool(command.display_name and (home_city_id or favorite_team_ids))
         return {
             "profile": {
-                "id": user_id,
-                "display_name": payload["display_name"],
-                "avatar_url": payload.get("avatar_url"),
+                "id": user.user_id,
+                "display_name": command.display_name,
+                "avatar_url": command.avatar_url,
                 "profile_completed": profile_completed,
                 "created_at": "2026-05-25T12:00:00Z",
                 "updated_at": "2026-05-25T12:05:00Z",
             },
             "preferences": {
-                "user_id": user_id,
-                "home_city_id": payload.get("home_city_id"),
-                "preferred_match_tags": payload.get("preferred_match_tags", []),
-                "favorite_team_ids": payload.get("favorite_team_ids", []),
+                "user_id": user.user_id,
+                "home_city_id": home_city_id,
+                "preferred_match_tags": command.preferred_match_tags,
+                "favorite_team_ids": favorite_team_ids,
                 "created_at": "2026-05-25T12:00:00Z",
                 "updated_at": "2026-05-25T12:05:00Z",
             },
@@ -62,10 +61,12 @@ class FakeProfileService:
 
 
 async def fake_current_user() -> dict:
-    return {
-        "user_id": "00000000-0000-0000-0000-000000000001",
-        "access_token": "valid-token",
-    }
+    from app.core.profile import AuthenticatedUser
+
+    return AuthenticatedUser(
+        user_id="00000000-0000-0000-0000-000000000001",
+        access_token="valid-token",
+    )
 
 
 def test_get_profile_requires_bearer_token() -> None:
@@ -102,7 +103,7 @@ def test_get_profile_rejects_empty_bearer_token() -> None:
 
 def test_get_profile_returns_nested_profile_for_authenticated_user() -> None:
     app.dependency_overrides[get_current_user] = fake_current_user
-    app.dependency_overrides[get_profile_service] = lambda: FakeProfileService()
+    app.dependency_overrides[get_profile_persistence] = lambda: FakeProfilePersistence()
 
     try:
         response = client.get("/me/profile", headers={"Authorization": "Bearer valid-token"})
@@ -137,7 +138,7 @@ def test_get_profile_returns_nested_profile_for_authenticated_user() -> None:
 
 def test_update_profile_rejects_too_many_favorite_teams() -> None:
     app.dependency_overrides[get_current_user] = fake_current_user
-    app.dependency_overrides[get_profile_service] = lambda: FakeProfileService()
+    app.dependency_overrides[get_profile_persistence] = lambda: FakeProfilePersistence()
 
     try:
         response = client.put(
@@ -167,9 +168,9 @@ def test_update_profile_rejects_too_many_favorite_teams() -> None:
 
 
 def test_update_profile_returns_computed_completion_state() -> None:
-    fake_service = FakeProfileService()
+    fake_persistence = FakeProfilePersistence()
     app.dependency_overrides[get_current_user] = fake_current_user
-    app.dependency_overrides[get_profile_service] = lambda: fake_service
+    app.dependency_overrides[get_profile_persistence] = lambda: fake_persistence
 
     try:
         response = client.put(
@@ -192,4 +193,4 @@ def test_update_profile_returns_computed_completion_state() -> None:
     assert response.json()["preferences"]["favorite_team_ids"] == [
         "22222222-2222-2222-2222-222222222222"
     ]
-    assert fake_service.updated_payload["payload"]["profile_completed"] is True
+    assert fake_persistence.updated_command["command"].display_name == "Alex"

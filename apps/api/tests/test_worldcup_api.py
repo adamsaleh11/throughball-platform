@@ -1,14 +1,15 @@
 from fastapi.testclient import TestClient
 
+from app.core.worldcup import MatchCatalogQuery
 from app.main import app
-from app.routes.worldcup import get_worldcup_service
+from app.routes.worldcup import get_worldcup_catalog
 
 
 client = TestClient(app)
 
 
 class FakeWorldCupService:
-    async def list_cities(self) -> list[dict]:
+    async def cities(self) -> list[dict]:
         return [
             {
                 "city_id": "874c6b46-de32-5014-8e54-da12587a7d7f",
@@ -26,10 +27,10 @@ class FakeWorldCupService:
             },
         ]
 
-    async def list_matches(self, city_id: str | None, page: int, page_size: int) -> dict:
-        assert city_id == "874c6b46-de32-5014-8e54-da12587a7d7f"
-        assert page == 1
-        assert page_size == 20
+    async def matches(self, query: MatchCatalogQuery) -> dict:
+        assert query.city_id == "874c6b46-de32-5014-8e54-da12587a7d7f"
+        assert query.page == 1
+        assert query.page_size == 20
         return {
             "matches": [
                 {
@@ -54,7 +55,7 @@ class FakeWorldCupService:
 
 
 def test_list_cities_returns_seeded_host_city_contract() -> None:
-    app.dependency_overrides[get_worldcup_service] = lambda: FakeWorldCupService()
+    app.dependency_overrides[get_worldcup_catalog] = lambda: FakeWorldCupService()
 
     try:
         response = client.get("/cities")
@@ -91,7 +92,7 @@ def test_list_cities_returns_seeded_host_city_contract() -> None:
 
 
 def test_list_matches_filters_by_city_and_returns_contract() -> None:
-    app.dependency_overrides[get_worldcup_service] = lambda: FakeWorldCupService()
+    app.dependency_overrides[get_worldcup_catalog] = lambda: FakeWorldCupService()
 
     try:
         response = client.get(

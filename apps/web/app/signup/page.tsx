@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Activity, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

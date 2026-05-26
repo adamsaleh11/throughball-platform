@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 import { Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

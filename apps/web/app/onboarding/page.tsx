@@ -1,14 +1,12 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, ChevronLeft, Loader2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ExperienceCard } from "@/components/ui/experience-card";
 import { Button } from "@/components/ui/button";
-import { fetchProfile, updateProfile, type ProfileResponse } from "@/lib/api/profile";
-import { footballExperiences, hostCities, teams } from "@/lib/reference-data";
-import { createSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { footballExperiences, hostCities } from "@/lib/reference-data";
+import { useProfileWorkflow } from "@/hooks/use-profile-workflow";
 
 const TOTAL_STEPS = 3;
 
@@ -25,90 +23,34 @@ const STEPS = [
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [authError, setAuthError] = useState("");
-
-  const [displayName, setDisplayName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [homeCityId, setHomeCityId] = useState("");
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [selectedExperiences, setSelectedExperiences] = useState<string[]>([]);
-  const [teamSearch, setTeamSearch] = useState("");
-
   const topRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      setAuthError("Supabase is not configured for this environment.");
-      return;
-    }
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace("/login");
-        return;
-      }
-      setAccessToken(data.session.access_token);
-    });
-  }, [router]);
-
-  const profileQuery = useQuery<ProfileResponse>({
-    queryKey: ["me", "profile", accessToken],
-    queryFn: () => fetchProfile(accessToken as string),
-    enabled: Boolean(accessToken),
-    retry: false
-  });
-
-  useEffect(() => {
-    if (profileQuery.data) {
-      setDisplayName(profileQuery.data.profile.display_name ?? "");
-      setAvatarUrl(profileQuery.data.profile.avatar_url ?? "");
-      setHomeCityId(profileQuery.data.preferences.home_city_id ?? "");
-      setSelectedTeams(profileQuery.data.preferences.favorite_team_ids);
-      const knownIds = new Set(footballExperiences.map((e) => e.id));
-      setSelectedExperiences(profileQuery.data.preferences.preferred_match_tags.filter((t) => knownIds.has(t)));
-    }
-  }, [profileQuery.data]);
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      updateProfile(accessToken as string, {
-        display_name: displayName,
-        avatar_url: avatarUrl || undefined,
-        home_city_id: homeCityId || undefined,
-        favorite_team_ids: selectedTeams,
-        preferred_match_tags: selectedExperiences
-      }),
-    onSuccess: (data) => {
+  const {
+    accessToken,
+    authError,
+    avatarUrl,
+    displayName,
+    filteredTeams,
+    homeCityId,
+    profileQuery,
+    saveMutation,
+    selectedExperienceSet,
+    selectedExperiences,
+    selectedTeamSet,
+    selectedTeams,
+    setAvatarUrl,
+    setDisplayName,
+    setHomeCityId,
+    setTeamSearch,
+    teamSearch,
+    toggleExperience,
+    toggleTeam
+  } = useProfileWorkflow({
+    onSaveSuccess: (data) => {
       if (data.profile.profile_completed) {
         router.push("/app");
       }
     }
   });
-
-  const selectedTeamSet = useMemo(() => new Set(selectedTeams), [selectedTeams]);
-  const selectedExperienceSet = useMemo(() => new Set(selectedExperiences), [selectedExperiences]);
-
-  const filteredTeams = useMemo(
-    () => teams.filter((t) => t.name.toLowerCase().includes(teamSearch.toLowerCase())),
-    [teamSearch]
-  );
-
-  function toggleTeam(id: string) {
-    if (selectedTeamSet.has(id)) {
-      setSelectedTeams(selectedTeams.filter((t) => t !== id));
-    } else if (selectedTeams.length < 10) {
-      setSelectedTeams([...selectedTeams, id]);
-    }
-  }
-
-  function toggleExperience(id: string) {
-    if (selectedExperienceSet.has(id)) {
-      setSelectedExperiences(selectedExperiences.filter((e) => e !== id));
-    } else if (selectedExperiences.length < 20) {
-      setSelectedExperiences([...selectedExperiences, id]);
-    }
-  }
 
   function goToStep(next: number) {
     setStep(next);
@@ -271,18 +213,18 @@ export default function OnboardingPage() {
 
         {/* Navigation */}
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          {mutation.error ? (
+          {saveMutation.error ? (
             <p className="w-full text-sm text-red-600">Unable to save profile. Please try again.</p>
           ) : null}
           {isLastStep ? (
             <>
               <Button
                 className="gap-2"
-                disabled={!accessToken || mutation.isPending}
-                onClick={() => mutation.mutate()}
+                disabled={!accessToken || saveMutation.isPending}
+                onClick={() => saveMutation.mutate()}
                 type="button"
               >
-                {mutation.isPending ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : null}
+                {saveMutation.isPending ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : null}
                 Finish setup
               </Button>
               <Button onClick={() => router.push("/app")} type="button" variant="secondary">

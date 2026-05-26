@@ -7,9 +7,14 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.auth import (
     AuthValidationError,
-    ProfileStorageError,
     SupabaseJwtValidator,
-    SupabaseProfileService,
+)
+from app.core.profile import (
+    AuthenticatedUser,
+    ProfilePersistence,
+    ProfileStorageError,
+    ProfileUpdateCommand,
+    SupabaseProfilePersistence,
 )
 
 
@@ -27,19 +32,14 @@ class ProfileUpdateRequest(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-    @property
-    def completed(self) -> bool:
-        return bool(self.display_name and (self.home_city_id or self.favorite_team_ids))
-
-    def service_payload(self) -> dict[str, Any]:
-        return {
-            "display_name": self.display_name,
-            "avatar_url": self.avatar_url,
-            "home_city_id": str(self.home_city_id) if self.home_city_id else None,
-            "preferred_match_tags": self.preferred_match_tags,
-            "favorite_team_ids": [str(team_id) for team_id in self.favorite_team_ids],
-            "profile_completed": self.completed,
-        }
+    def to_command(self) -> ProfileUpdateCommand:
+        return ProfileUpdateCommand(
+            display_name=self.display_name,
+            avatar_url=self.avatar_url,
+            home_city_id=self.home_city_id,
+            preferred_match_tags=self.preferred_match_tags,
+            favorite_team_ids=self.favorite_team_ids,
+        )
 
 
 def response_meta(request: Request) -> dict[str, Any]:
@@ -76,24 +76,11 @@ def storage_error(request: Request, error: ProfileStorageError) -> JSONResponse:
     )
 
 
-class ProfileService:
-    async def get_profile(self, user_id: str, access_token: str) -> dict[str, Any]:
-        raise NotImplementedError("Supabase profile service is not configured.")
-
-    async def update_profile(
-        self,
-        user_id: str,
-        access_token: str,
-        payload: dict[str, Any],
-    ) -> dict[str, Any]:
-        raise NotImplementedError("Supabase profile service is not configured.")
+def get_profile_persistence() -> ProfilePersistence:
+    return SupabaseProfilePersistence()
 
 
-def get_profile_service() -> ProfileService:
-    return SupabaseProfileService()
-
-
-async def get_current_user(authorization: str = Header(default="")) -> Optional[dict[str, str]]:
+async def get_current_user(authorization: str = Header(default="")) -> Optional[AuthenticatedUser]:
     if not authorization:
         return None
 
@@ -102,7 +89,8 @@ async def get_current_user(authorization: str = Header(default="")) -> Optional[
         return None
 
     try:
-        return await auth_validator.validate(token)
+        user = await auth_validator.validate(token)
+        return AuthenticatedUser(user_id=user["user_id"], access_token=user["access_token"])
     except AuthValidationError:
         return None
 
@@ -110,8 +98,8 @@ async def get_current_user(authorization: str = Header(default="")) -> Optional[
 @router.get("/me/profile")
 async def get_profile(
     request: Request,
-    current_user: Optional[dict[str, str]] = Depends(get_current_user),
-    profile_service: ProfileService = Depends(get_profile_service),
+    current_user: Optional[AuthenticatedUser] = Depends(get_current_user),
+    profile_persistence: ProfilePersistence = Depends(get_profile_persistence),
 ) -> JSONResponse:
     if current_user is None:
         authorization = request.headers.get("authorization", "")
@@ -120,10 +108,7 @@ async def get_profile(
         return unauthorized(request, "Missing bearer token.")
 
     try:
-        profile_payload = await profile_service.get_profile(
-            current_user["user_id"],
-            current_user["access_token"],
-        )
+        profile_payload = await profile_persistence.current_profile(current_user)
     except ProfileStorageError as error:
         return storage_error(request, error)
     return JSONResponse(
@@ -138,8 +123,8 @@ async def get_profile(
 async def update_profile(
     payload: ProfileUpdateRequest,
     request: Request,
-    current_user: Optional[dict[str, str]] = Depends(get_current_user),
-    profile_service: ProfileService = Depends(get_profile_service),
+    current_user: Optional[AuthenticatedUser] = Depends(get_current_user),
+    profile_persistence: ProfilePersistence = Depends(get_profile_persistence),
 ) -> JSONResponse:
     if current_user is None:
         authorization = request.headers.get("authorization", "")
@@ -148,10 +133,9 @@ async def update_profile(
         return unauthorized(request, "Missing bearer token.")
 
     try:
-        profile_payload = await profile_service.update_profile(
-            current_user["user_id"],
-            current_user["access_token"],
-            payload.service_payload(),
+        profile_payload = await profile_persistence.save_current_profile(
+            current_user,
+            payload.to_command(),
         )
     except ProfileStorageError as error:
         return storage_error(request, error)
