@@ -34,12 +34,26 @@ Install frontend dependencies:
 npm install
 ```
 
+Run the full local stack:
+
+```sh
+npm run dev
+```
+
 Install backend dependencies:
 
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r apps/api/requirements.txt
+```
+
+On Windows PowerShell:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r apps/api/requirements.txt
 ```
 
 Run the Next.js frontend:
@@ -52,6 +66,12 @@ Run the FastAPI backend:
 
 ```sh
 npm run dev:api
+```
+
+On Windows PowerShell:
+
+```powershell
+npm run dev:api:win
 ```
 
 Check backend health:

@@ -11,6 +11,7 @@ from app.middleware.observability import (
 )
 from app.models.health import HealthResponse, ObservabilityMeta
 from app.routes.profile import router as profile_router
+from app.routes.worldcup import router as worldcup_router
 
 
 settings = get_settings()
@@ -28,6 +29,7 @@ app.add_middleware(
 app.add_middleware(ObservabilityMiddleware)
 app.add_middleware(OpenTelemetryPlaceholderMiddleware)
 app.include_router(profile_router)
+app.include_router(worldcup_router)
 
 
 @app.get("/health", response_model=HealthResponse)

@@ -2,9 +2,10 @@
   "name": "throughball-platform",
   "private": true,
   "scripts": {
-    "dev": "bash scripts/dev.sh",
+    "dev": "node scripts/dev.mjs",
     "dev:web": "npm --workspace apps/web run dev",
     "dev:api": "python3 -m uvicorn app.main:app --app-dir apps/api --reload --host 127.0.0.1 --port 8000",
+    "dev:api:win": "powershell -ExecutionPolicy Bypass -File scripts/dev-api.ps1",
     "lint:web": "npm --workspace apps/web run lint",
     "typecheck:web": "npm --workspace apps/web run typecheck"
   },
