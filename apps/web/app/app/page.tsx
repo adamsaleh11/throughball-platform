@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { LogOut, Settings, Tag, UserRound } from "lucide-react";
+import { LogOut, MapPin, Settings, Tag, UserRound } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,20 @@ export default function ProtectedAppPage() {
                 )}
               </section>
             </div>
+            <Link
+              href="/app/heatmap"
+              className="flex items-center gap-3 rounded-md border border-border p-5 transition-colors hover:bg-muted/40"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                <MapPin aria-hidden="true" className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Fan Intelligence</p>
+                <p className="text-sm text-muted-foreground">
+                  Explore supporter hotspots across host cities
+                </p>
+              </div>
+            </Link>
             {!profileQuery.data.profile.profile_completed && (
               <div className="rounded-md border border-border bg-muted/40 p-4">
                 <p className="text-sm font-medium">Complete your profile</p>
