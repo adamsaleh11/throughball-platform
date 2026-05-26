@@ -23,7 +23,41 @@ Platform repo for local-first demo development.
 ## Getting Started
 
 ```sh
-cp .env.example .env
+cp .env.example .env.local
 ```
 
-Add implementation-specific setup commands as the application stack is introduced.
+## Local Development
+
+Install frontend dependencies:
+
+```sh
+npm install
+```
+
+Install backend dependencies:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r apps/api/requirements.txt
+```
+
+Run the Next.js frontend:
+
+```sh
+npm run dev:web
+```
+
+Run the FastAPI backend:
+
+```sh
+npm run dev:api
+```
+
+Check backend health:
+
+```sh
+curl http://localhost:8000/health
+```
+
+No cloud resources, hosted Redis, paid monitoring, Vertex AI calls, or external APIs are required for this foundation ticket.
