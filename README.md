@@ -81,3 +81,19 @@ curl http://localhost:8000/health
 ```
 
 No cloud resources, hosted Redis, paid monitoring, Vertex AI calls, or external APIs are required for this foundation ticket.
+
+## World Cup Fixture Import
+
+Runtime match APIs read Supabase only. To refresh World Cup fixture seed data manually from API-Football, run:
+
+```sh
+API_FOOTBALL_KEY=... python3 scripts/import_api_football_worldcup.py
+```
+
+The script emits SQL to `supabase/generated/api-football-worldcup.sql`, which is gitignored because provider-derived data should not be committed without a licensing review. Apply the generated SQL through your local Supabase SQL workflow after reviewing it.
+
+You can also render SQL from a saved provider response without using network quota:
+
+```sh
+python3 scripts/import_api_football_worldcup.py --input-json provider-fixtures.json
+```

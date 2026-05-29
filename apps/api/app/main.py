@@ -10,7 +10,9 @@ from app.middleware.observability import (
     OpenTelemetryPlaceholderMiddleware,
 )
 from app.models.health import HealthResponse, ObservabilityMeta
+from app.routes.city_guide import router as city_guide_router
 from app.routes.fan import router as fan_router
+from app.routes.itineraries import router as itineraries_router
 from app.routes.profile import router as profile_router
 from app.routes.worldcup import router as worldcup_router
 
@@ -29,7 +31,9 @@ app.add_middleware(
 )
 app.add_middleware(ObservabilityMiddleware)
 app.add_middleware(OpenTelemetryPlaceholderMiddleware)
+app.include_router(city_guide_router)
 app.include_router(fan_router)
+app.include_router(itineraries_router)
 app.include_router(profile_router)
 app.include_router(worldcup_router)
 

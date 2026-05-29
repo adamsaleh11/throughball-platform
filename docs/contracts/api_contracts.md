@@ -384,7 +384,46 @@ Endpoint: `GET /matches?city_id=city_toronto&page=1&page_size=20`
 }
 ```
 
-Endpoint: `GET /venues?city_id=city_toronto&page=1&page_size=20`
+Endpoint: `GET /cities/{city_id}/venues?venue_type=bar&amenity=screens&tag=world-cup&page=1&page_size=20`
+
+## Host City Intelligence DTOs
+
+City guide APIs are public, deterministic, and backed by Supabase seed data. They do not call live third-party APIs at request time. Every guide record includes attribution fields.
+
+### City Detail
+
+Endpoint: `GET /cities/{city_id}`
+
+Returns one canonical host city from the existing host city catalog.
+
+### City Events
+
+Endpoint: `GET /cities/{city_id}/events?event_type=world_cup_hosting&starts_after=2026-06-01T00:00:00Z&starts_before=2026-07-31T23:59:59Z&tag=world-cup&page=1&page_size=20`
+
+Supported filters: `event_type`, `starts_after`, `starts_before`, `tag`, `page`, `page_size`.
+
+### Tourist Spots
+
+Endpoint: `GET /cities/{city_id}/tourist-spots?spot_type=landmark&area_label=Downtown&tag=landmark&page=1&page_size=20`
+
+Supported filters: `spot_type`, `area_label`, `tag`, `page`, `page_size`.
+
+### Transport Hubs
+
+Endpoint: `GET /cities/{city_id}/transport-hubs?hub_type=airport&tag=airport&page=1&page_size=20`
+
+Supported filters: `hub_type`, `area_label`, `tag`, `page`, `page_size`.
+
+### Source Fields
+
+All venue, event, tourist spot, and transport hub records include:
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `source_name` | string | yes | Human-readable source attribution. |
+| `source_url` | string | yes | URL for source attribution or verification. |
+| `data_origin` | string | yes | Source class such as `official_site` or `wikidata`. |
+| `last_verified_at` | string | yes | Date the seed record was verified. |
 
 ## Fan Check-In DTOs
 
@@ -623,29 +662,40 @@ Endpoint: `POST /recommendations`
 
 ## Itinerary DTOs
 
-### CreateItineraryRequest
+Itinerary generation is not implemented until Phase 06. Current itinerary APIs persist and load already-generated or mocked itinerary aggregates.
+
+### ItineraryInput
 
 ```json
 {
-  "city_id": "city_toronto",
-  "match_id": "match_2026_001",
-  "venue_ids": ["venue_queen_pub"],
-  "start_area_label": "Queen West",
-  "party_size": 3
+  "city_id": "874c6b46-de32-5014-8e54-da12587a7d7f",
+  "match_id": null,
+  "date": "2026-06-12",
+  "party_size": 2,
+  "interests": ["fan_zone", "food"],
+  "pace": "balanced"
 }
 ```
 
-### ItineraryStop
+### ItineraryItem
 
 ```json
 {
-  "stop_id": "stop_001",
-  "venue_id": "venue_queen_pub",
-  "order": 1,
-  "planned_arrival_at": "2026-06-12T21:00:00Z",
-  "duration_minutes": 120,
-  "score": 94,
-  "reason_codes": ["best_match_atmosphere", "capacity_fit"]
+  "item_id": "33333333-3333-4333-8333-333333333333",
+  "position": 1,
+  "item_type": "venue",
+  "source_table": "venues",
+  "source_id": "22222222-2222-4222-8222-222222222222",
+  "title": "BMO Field",
+  "description": "Arrive early around Exhibition Place.",
+  "starts_at": "2026-06-12T16:00:00Z",
+  "ends_at": "2026-06-12T18:00:00Z",
+  "area_label": "Exhibition Place",
+  "route_context": {
+    "from_previous_label": null,
+    "approx_minutes": 0,
+    "mode": "unknown"
+  }
 }
 ```
 
@@ -653,47 +703,73 @@ Endpoint: `POST /recommendations`
 
 ```json
 {
-  "itinerary_id": "itin_001",
-  "city_id": "city_toronto",
-  "match_id": "match_2026_001",
-  "party_size": 3,
-  "stops": [
+  "itinerary_id": "11111111-1111-4111-8111-111111111111",
+  "city_id": "874c6b46-de32-5014-8e54-da12587a7d7f",
+  "match_id": null,
+  "input_hash": "sha256:...",
+  "input": {
+    "city_id": "874c6b46-de32-5014-8e54-da12587a7d7f",
+    "match_id": null,
+    "date": "2026-06-12",
+    "party_size": 2,
+    "interests": ["fan_zone", "food"],
+    "pace": "balanced"
+  },
+  "title": "Match Day in Toronto",
+  "summary": "A compact match-day plan.",
+  "status": "saved",
+  "items": [
     {
-      "stop_id": "stop_001",
-      "venue_id": "venue_queen_pub",
-      "order": 1,
-      "planned_arrival_at": "2026-06-12T21:00:00Z",
-      "duration_minutes": 120,
-      "score": 94,
-      "reason_codes": ["best_match_atmosphere", "capacity_fit"]
+      "item_id": "33333333-3333-4333-8333-333333333333",
+      "position": 1,
+      "item_type": "venue",
+      "source_table": "venues",
+      "source_id": "22222222-2222-4222-8222-222222222222",
+      "title": "BMO Field",
+      "description": "Arrive early around Exhibition Place.",
+      "starts_at": "2026-06-12T16:00:00Z",
+      "ends_at": "2026-06-12T18:00:00Z",
+      "area_label": "Exhibition Place",
+      "route_context": {
+        "from_previous_label": null,
+        "approx_minutes": 0,
+        "mode": "unknown"
+      }
     }
   ],
-  "created_at": "2026-05-25T14:20:00Z"
+  "created_at": "2026-05-28T18:00:00Z",
+  "updated_at": "2026-05-28T18:00:00Z"
 }
 ```
 
-### CreateItineraryResponse
+### SaveItineraryRequest
 
 ```json
 {
-  "itinerary": {
-    "itinerary_id": "itin_001",
-    "city_id": "city_toronto",
-    "match_id": "match_2026_001",
-    "party_size": 3,
-    "stops": [
-      {
-        "stop_id": "stop_001",
-        "venue_id": "venue_queen_pub",
-        "order": 1,
-        "planned_arrival_at": "2026-06-12T21:00:00Z",
-        "duration_minutes": 120,
-        "score": 94,
-        "reason_codes": ["best_match_atmosphere", "capacity_fit"]
-      }
-    ],
-    "created_at": "2026-05-25T14:20:00Z"
+  "input": {
+    "city_id": "874c6b46-de32-5014-8e54-da12587a7d7f",
+    "match_id": null,
+    "date": "2026-06-12",
+    "party_size": 2,
+    "interests": ["fan_zone", "food"],
+    "pace": "balanced"
   },
+  "itinerary": {
+    "title": "Match Day in Toronto",
+    "summary": "A compact match-day plan.",
+    "items": []
+  }
+}
+```
+
+Endpoint: `POST /itineraries/save`
+
+### SaveItineraryResponse
+
+```json
+{
+  "itinerary": "Itinerary",
+  "reused": false,
   "meta": {
     "request_id": "req_900",
     "trace_id": "trc_900",
@@ -704,7 +780,55 @@ Endpoint: `POST /recommendations`
 }
 ```
 
-Endpoint: `POST /itineraries`
+New saves return `201 Created` with `reused: false`. Duplicate normalized inputs for the same user return `200 OK` with `reused: true`.
+
+### MyItinerariesResponse
+
+```json
+{
+  "itineraries": ["Itinerary"],
+  "pagination": {
+    "page": 1,
+    "page_size": 20,
+    "total_items": 1,
+    "total_pages": 1,
+    "has_next": false
+  },
+  "meta": {
+    "request_id": "req_901",
+    "trace_id": "trc_901",
+    "latency_ms": 24,
+    "retries": 0,
+    "degraded": false
+  }
+}
+```
+
+Endpoint: `GET /itineraries/me`
+
+### GenerateItineraryStubResponse
+
+```json
+{
+  "error": {
+    "code": "ITINERARY_GENERATION_NOT_IMPLEMENTED",
+    "message": "Itinerary generation is not implemented until Phase 06.",
+    "details": {
+      "phase": "Phase 06",
+      "contract": "POST /itineraries/save accepts generated itinerary payloads for persistence."
+    }
+  },
+  "meta": {
+    "request_id": "req_902",
+    "trace_id": "trc_902",
+    "latency_ms": 12,
+    "retries": 0,
+    "degraded": false
+  }
+}
+```
+
+Endpoint: `POST /itineraries/generate`
 
 ## AI DTOs
 
@@ -807,6 +931,8 @@ Endpoint: `POST /ai/recommendation-explanations`
 | `GET` | `/check-ins/aggregates` | `match_id` query | ListVenueCheckInAggregatesResponse | Aggregate only. |
 | `GET` | `/hotspots` | `city_id`, `match_id`, PageRequest query | ListHotspotsResponse | Deterministic rankings. |
 | `POST` | `/recommendations` | RecommendationRequest | RecommendationResponse | Deterministic recommendations. |
-| `POST` | `/itineraries` | CreateItineraryRequest | CreateItineraryResponse | Deterministic ordering. |
+| `POST` | `/itineraries/generate` | ItineraryInput | GenerateItineraryStubResponse | Auth required; returns `501` until Phase 06. |
+| `POST` | `/itineraries/save` | SaveItineraryRequest | SaveItineraryResponse | Auth required; dedupes by user and normalized input hash. |
+| `GET` | `/itineraries/me` | PageRequest query | MyItinerariesResponse | Auth required; returns saved aggregates. |
 | `POST` | `/ai/summaries` | AISummaryRequest | AISummaryResponse | AI synthesis only. |
 | `POST` | `/ai/recommendation-explanations` | AIRecommendationExplanationRequest | AIRecommendationExplanationResponse | AI explanation only. |
