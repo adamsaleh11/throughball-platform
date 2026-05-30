@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, LogOut, MapPin, Settings, Tag, UserRound } from "lucide-react";
+import { BarChart3, Building2, ListChecks, LogOut, MapPin, Settings, Tag, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { fetchProfile, type ProfileResponse } from "@/lib/api/profile";
+import { CITY_DASHBOARD_STORAGE_KEY, DEFAULT_CITY_ID, resolveDashboardCityId } from "@/lib/city-dashboard";
 import { footballExperiences, hostCities } from "@/lib/reference-data";
 import { createSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -16,6 +17,7 @@ export default function ProtectedAppPage() {
   const router = useRouter();
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [authError, setAuthError] = useState("");
+  const [cityDashboardHref, setCityDashboardHref] = useState(`/app/cities/${DEFAULT_CITY_ID}`);
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -45,6 +47,12 @@ export default function ProtectedAppPage() {
       router.replace("/onboarding");
     }
   }, [profileQuery.data, router]);
+
+  useEffect(() => {
+    const storedCityId = localStorage.getItem(CITY_DASHBOARD_STORAGE_KEY);
+    const profileCityId = profileQuery.data?.preferences.home_city_id ?? null;
+    setCityDashboardHref(`/app/cities/${resolveDashboardCityId(profileCityId, storedCityId)}`);
+  }, [profileQuery.data]);
 
   async function logout() {
     const supabase = createSupabaseBrowserClient();
@@ -136,7 +144,35 @@ export default function ProtectedAppPage() {
                 )}
               </section>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <Link
+                href="/app/itineraries"
+                className="flex items-center gap-3 rounded-md border border-border p-5 transition-colors hover:bg-muted/40"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                  <ListChecks aria-hidden="true" className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Itineraries</p>
+                  <p className="text-sm text-muted-foreground">
+                    Generate, inspect, and share saved match-day plans
+                  </p>
+                </div>
+              </Link>
+              <Link
+                href={cityDashboardHref}
+                className="flex items-center gap-3 rounded-md border border-border p-5 transition-colors hover:bg-muted/40"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                  <Building2 aria-hidden="true" className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Host City Dashboard</p>
+                  <p className="text-sm text-muted-foreground">
+                    Explore matches, hotspots, venues, and city guide records
+                  </p>
+                </div>
+              </Link>
               <Link
                 href="/app/heatmap"
                 className="flex items-center gap-3 rounded-md border border-border p-5 transition-colors hover:bg-muted/40"
